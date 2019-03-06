@@ -19,19 +19,36 @@ defmodule Stateful.OrdersTest do
       order
     end
 
-    test "list_orders/0 returns all orders" do
-      order = order_fixture()
-      assert Orders.list_orders() == [order]
+    test "list_orders/0 returns only the most recent version of each order" do
+      order0_v0 = order_fixture()
+      {:ok, order0_v1} = Orders.update_order(order0_v0, @update_attrs)
+      {:ok, order0_v2} = Orders.update_order(order0_v1, @update_attrs)
+
+      order1_v0 = order_fixture()
+      {:ok, order1_v1} = Orders.update_order(order1_v0, @update_attrs)
+      {:ok, order1_v2} = Orders.update_order(order1_v1, @update_attrs)
+
+      assert Orders.list_orders() == [order0_v2, order1_v2]
     end
 
     test "get_order!/1 returns the order with given id" do
-      order = order_fixture()
-      assert Orders.get_order!(order.id) == order
+      order0_v0 = order_fixture()
+      {:ok, order0_v1} = Orders.update_order(order0_v0, @update_attrs)
+      {:ok, order0_v2} = Orders.update_order(order0_v1, @update_attrs)
+
+      order1_v0 = order_fixture()
+      {:ok, order1_v1} = Orders.update_order(order1_v0, @update_attrs)
+      {:ok, order1_v2} = Orders.update_order(order1_v1, @update_attrs)
+
+      assert Orders.get_order!(order0_v0.id) == order0_v2
+      assert Orders.get_order!(order1_v0.id) == order1_v2
     end
 
     test "create_order/1 with valid data creates a order" do
       assert {:ok, %Order{} = order} = Orders.create_order(@valid_attrs)
-      assert order.name == "some name"
+      assert order.name == @valid_attrs.name
+      assert order.id != nil
+      assert order.row_id != nil
     end
 
     test "create_order/1 with invalid data returns error changeset" do
@@ -48,12 +65,6 @@ defmodule Stateful.OrdersTest do
       order = order_fixture()
       assert {:error, %Ecto.Changeset{}} = Orders.update_order(order, @invalid_attrs)
       assert order == Orders.get_order!(order.id)
-    end
-
-    test "delete_order/1 deletes the order" do
-      order = order_fixture()
-      assert {:ok, %Order{}} = Orders.delete_order(order)
-      assert_raise Ecto.NoResultsError, fn -> Orders.get_order!(order.id) end
     end
 
     test "change_order/1 returns a order changeset" do

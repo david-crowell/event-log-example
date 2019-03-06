@@ -68,19 +68,6 @@ defmodule StatefulWeb.OrderControllerTest do
     end
   end
 
-  describe "delete order" do
-    setup [:create_order]
-
-    test "deletes chosen order", %{conn: conn, order: order} do
-      conn = delete(conn, Routes.order_path(conn, :delete, order))
-      assert response(conn, 204)
-
-      assert_error_sent 404, fn ->
-        get(conn, Routes.order_path(conn, :show, order))
-      end
-    end
-  end
-
   defp create_order(_) do
     order = fixture(:order)
     {:ok, order: order}

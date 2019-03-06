@@ -17,7 +17,7 @@ defmodule StatefulWeb.Router do
     pipe_through :api
 
     get "/", PageController, :index
-    resources "/orders", OrderController
+    resources "/orders", OrderController, except: [:delete]
   end
 
   # Other scopes may use custom stacks.
